@@ -1,0 +1,8 @@
+dist/
+build/
+prometheus-*-exporter
+*.test
+*.out
+.DS_Store
+.idea/
+.vscode/

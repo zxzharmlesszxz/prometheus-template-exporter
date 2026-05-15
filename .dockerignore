@@ -1,0 +1,11 @@
+.git
+.gitignore
+.gitlab-ci.yml
+.idea
+.vscode
+dist
+build
+prometheus-*-exporter
+*.test
+*.out
+.DS_Store
