@@ -6,6 +6,15 @@
 dist
 build
 prometheus-*-exporter
+
+# Test and coverage artifacts.
+coverage.out
+coverage.txt
+*.coverprofile
+*.coverage
+*.prof
+*.pprof
 *.test
 *.out
+
 .DS_Store

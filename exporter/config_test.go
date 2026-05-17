@@ -65,6 +65,18 @@ func TestConfigForProjectFallsBackToDefaultListenAddress(t *testing.T) {
 	}
 }
 
+func TestConfigForProjectSkipsBlankFeatureListenAddress(t *testing.T) {
+	t.Parallel()
+
+	blank := CollectorFeature{Name: "blank", DefaultListenAddressValue: "  "}
+	nonBlank := CollectorFeature{Name: "non_blank", DefaultListenAddressValue: ":9777"}
+	cfg := ConfigForProject("prometheus-demo-exporter", blank, nonBlank)
+
+	if cfg.DefaultListenAddress != ":9777" {
+		t.Fatalf("DefaultListenAddress = %q, want %q", cfg.DefaultListenAddress, ":9777")
+	}
+}
+
 func TestExporterNameFromProject(t *testing.T) {
 	t.Parallel()
 
@@ -86,6 +98,32 @@ func TestExporterNameFromProject(t *testing.T) {
 
 			if got := ExporterNameFromProject(tc.project); got != tc.want {
 				t.Fatalf("ExporterNameFromProject(%q) = %q, want %q", tc.project, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestDescriptionFromProject(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		project string
+		want    string
+	}{
+		{project: "", want: defaultDescription},
+		{project: "  ", want: defaultDescription},
+		{project: "example.com/team/custom-exporter", want: "Custom Exporter"},
+		{project: "multi_part.name", want: "Multi Part Name"},
+		{project: "example.com/team/прометей-exporter", want: "Прометей Exporter"},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.project, func(t *testing.T) {
+			t.Parallel()
+
+			if got := DescriptionFromProject(tc.project); got != tc.want {
+				t.Fatalf("DescriptionFromProject(%q) = %q, want %q", tc.project, got, tc.want)
 			}
 		})
 	}

@@ -4,6 +4,7 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -68,9 +69,18 @@ func DescriptionFromProject(projectName string) string {
 		if part == "" {
 			continue
 		}
-		parts[i] = strings.ToUpper(part[:1]) + part[1:]
+		parts[i] = titleProjectPart(part)
 	}
 	return strings.Join(parts, " ")
+}
+
+func titleProjectPart(part string) string {
+	runes := []rune(part)
+	if len(runes) == 0 {
+		return ""
+	}
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
 
 func (c Config) normalized() Config {

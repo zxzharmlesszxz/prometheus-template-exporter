@@ -41,3 +41,11 @@ func TestResolveVersionMetadata(t *testing.T) {
 		}
 	})
 }
+
+func TestFirstNonEmptyReturnsEmptyWhenNoValuesExist(t *testing.T) {
+	t.Parallel()
+
+	if got := firstNonEmpty("", " ", "\t"); got != "" {
+		t.Fatalf("firstNonEmpty() = %q, want empty string", got)
+	}
+}

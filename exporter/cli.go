@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -10,6 +11,12 @@ import (
 	"github.com/prometheus/common/version"
 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 )
+
+type cliConfig struct {
+	options       Options
+	promslogCfg   *promslog.Config
+	runtimeConfig []any
+}
 
 func Main(cfg Config) {
 	if err := RunCLI(cfg, os.Args[1:]); err != nil {
@@ -30,6 +37,19 @@ func RunCLI(cfg Config, args []string) error {
 	cfg = cfg.normalized()
 	HydrateVersionMetadata()
 
+	parsed, err := parseCLIConfig(cfg, args)
+	if err != nil {
+		return err
+	}
+
+	logger := promslog.New(parsed.promslogCfg)
+	logStartup(logger, cfg, parsed.runtimeConfig)
+
+	return Run(parsed.options, logger)
+}
+
+func parseCLIConfig(cfg Config, args []string) (cliConfig, error) {
+	cfg = cfg.normalized()
 	app := kingpin.New(cfg.Name, cfg.Description)
 	promslogCfg := &promslog.Config{}
 	promflag.AddFlags(app, promslogCfg)
@@ -51,12 +71,11 @@ func RunCLI(cfg Config, args []string) error {
 	app.Version(version.Print(cfg.Namespace))
 	app.HelpFlag.Short('h')
 	if _, err := app.Parse(args); err != nil {
-		return err
+		return cliConfig{}, err
 	}
-
-	logger := promslog.New(promslogCfg)
-	logger.Info("Starting "+cfg.Name, "version", version.Info())
-	logger.Info("Build context", "build_context", version.BuildContext())
+	if err := validateMetricsPath(*metricsPath); err != nil {
+		return cliConfig{}, fmt.Errorf("invalid --web.telemetry-path %q: %w", *metricsPath, err)
+	}
 
 	opts := Options{
 		Name:         cfg.Name,
@@ -68,18 +87,30 @@ func RunCLI(cfg Config, args []string) error {
 		Features:     cfg.Features,
 	}
 
+	return cliConfig{
+		options:       opts,
+		promslogCfg:   promslogCfg,
+		runtimeConfig: runtimeConfigForOptions(opts),
+	}, nil
+}
+
+func runtimeConfigForOptions(opts Options) []any {
 	runtimeConfig := []any{
 		"metrics_path", opts.MetricsPath,
 		"pprof_enabled", opts.EnablePprof,
 	}
-	for _, feature := range cfg.Features {
+	for _, feature := range opts.Features {
 		reporter, ok := feature.(RuntimeConfigReporter)
 		if !ok {
 			continue
 		}
 		runtimeConfig = append(runtimeConfig, reporter.RuntimeConfig()...)
 	}
-	logger.Info("Runtime config", runtimeConfig...)
+	return runtimeConfig
+}
 
-	return Run(opts, logger)
+func logStartup(logger *slog.Logger, cfg Config, runtimeConfig []any) {
+	logger.Info("Starting "+cfg.Name, "version", version.Info())
+	logger.Info("Build context", "build_context", version.BuildContext())
+	logger.Info("Runtime config", runtimeConfig...)
 }

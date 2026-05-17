@@ -60,6 +60,8 @@ func main() {
 }
 ```
 
+A compiling example feature is available in `examples/custom-feature`.
+
 `ConfigFromProject` derives exporter name and metric namespace from the Go module/project name.
 For example, `prometheus-pkg-exporter` becomes `pkg_exporter`.
 The default listen address is taken from the first feature that implements `DefaultListenAddress() string`, otherwise it falls back to `:9900`.
@@ -99,6 +101,9 @@ Every exporter built on this template gets:
 --log.format
 ```
 
+`--web.telemetry-path` must be a literal URL path that starts with `/`.
+`/healthz` and `/debug/pprof/*` are reserved for built-in handlers.
+
 The concrete feature decides which domain flags to add.
 
 ## Local Run
@@ -128,8 +133,25 @@ Endpoints:
 ## Tests
 
 ```bash
-go test ./...
+make check
 ```
+
+`make check` runs formatting checks, `go vet`, `staticcheck`, coverage threshold checks, binary smoke tests, and race tests.
+
+`make coverage-check` enforces `COVERAGE_THRESHOLD`, which defaults to `90.0`.
+Override it when needed:
+
+```bash
+make coverage-check COVERAGE_THRESHOLD=95.0
+```
+
+`make smoke` builds the binary with injected version metadata, checks `--version`,
+verifies telemetry-path validation, and probes `/healthz` plus `/metrics`.
+`make docker-smoke` performs the same version and endpoint checks against the
+Docker runtime image when Docker is available. It is optional and not part of
+the default check target.
+
+See `MAINTAINING.md` for maintenance notes.
 
 ## Version Metadata
 

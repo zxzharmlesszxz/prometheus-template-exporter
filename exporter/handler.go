@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 
@@ -19,6 +20,18 @@ type HandlerOptions struct {
 }
 
 func NewHandler(opts HandlerOptions) http.Handler {
+	return newHandler(opts.normalized())
+}
+
+func NewHandlerChecked(opts HandlerOptions) (http.Handler, error) {
+	opts = opts.normalized()
+	if err := validateMetricsPath(opts.MetricsPath); err != nil {
+		return nil, fmt.Errorf("invalid metrics path %q: %w", opts.MetricsPath, err)
+	}
+	return newHandler(opts), nil
+}
+
+func (opts HandlerOptions) normalized() HandlerOptions {
 	if opts.Name == "" {
 		opts.Name = defaultLandingName
 	}
@@ -31,7 +44,10 @@ func NewHandler(opts HandlerOptions) http.Handler {
 	if opts.Registry == nil {
 		opts.Registry = prometheus.NewRegistry()
 	}
+	return opts
+}
 
+func newHandler(opts HandlerOptions) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle(opts.MetricsPath, promhttp.HandlerFor(opts.Registry, promhttp.HandlerOpts{}))
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {

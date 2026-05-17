@@ -1,0 +1,20 @@
+// Package exporter provides the reusable shell for concrete Prometheus
+// exporters.
+//
+// The package owns common exporter behavior: command-line bootstrap, standard
+// web and logging flags, exporter-toolkit HTTP serving, health and metrics
+// handlers, Prometheus registry wiring, standard Go/process/build collectors,
+// and version metadata hydration.
+//
+// Concrete exporters provide domain behavior by implementing Feature and
+// passing one or more features to MainFromProject, Main, RunCLIFromProject, or
+// RunCLI. A feature registers its own flags and collectors; optional interfaces
+// add feature names to logs, report runtime configuration fields, or override
+// the default listen address.
+//
+// For programmatic embedding, Run and NewServer construct the same registry and
+// HTTP stack without using process arguments. NewServerChecked and
+// NewHandlerChecked return validation errors for invalid metrics paths. NewHandler
+// is a lower-level constructor for focused tests or custom embedding; callers
+// using it directly are responsible for passing valid handler options.
+package exporter

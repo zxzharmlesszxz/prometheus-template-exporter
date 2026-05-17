@@ -19,6 +19,8 @@ type Options struct {
 	Features     []Feature
 }
 
+var listenAndServe = web.ListenAndServe
+
 func (o Options) normalized() Options {
 	if o.Name == "" {
 		o.Name = defaultExporterName
@@ -37,6 +39,9 @@ func (o Options) normalized() Options {
 
 func Run(opts Options, logger *slog.Logger) error {
 	opts = opts.normalized()
+	if err := validateMetricsPath(opts.MetricsPath); err != nil {
+		return fmt.Errorf("invalid metrics path %q: %w", opts.MetricsPath, err)
+	}
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -56,7 +61,7 @@ func Run(opts Options, logger *slog.Logger) error {
 	})
 
 	srv := &http.Server{Handler: handler}
-	return web.ListenAndServe(srv, opts.ToolkitFlags, logger)
+	return listenAndServe(srv, opts.ToolkitFlags, logger)
 }
 
 func MustRun(opts Options, logger *slog.Logger) {
@@ -76,4 +81,19 @@ func NewServer(opts Options, registry *prometheus.Registry) *http.Server {
 			EnablePprof: opts.EnablePprof,
 		}),
 	}
+}
+
+func NewServerChecked(opts Options, registry *prometheus.Registry) (*http.Server, error) {
+	opts = opts.normalized()
+	handler, err := NewHandlerChecked(HandlerOptions{
+		Name:        opts.Name,
+		Description: opts.Description,
+		MetricsPath: opts.MetricsPath,
+		Registry:    registry,
+		EnablePprof: opts.EnablePprof,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &http.Server{Handler: handler}, nil
 }

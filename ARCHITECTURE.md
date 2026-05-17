@@ -50,13 +50,41 @@ The helper `CollectorFeature` can be used when a feature only needs callbacks in
 
 ## Common HTTP Semantics
 
-- `/metrics` exposes the configured registry.
+- The configured telemetry path exposes the Prometheus registry.
+- The default telemetry path is `/metrics`.
+- `/` serves the exporter-toolkit landing page when the telemetry path is not `/`.
+- When the telemetry path is `/`, `/` serves metrics and no landing page is registered.
 - `/healthz` returns `200 OK` with `ok\n` while the process is serving requests.
 - `/debug/pprof/*` is disabled unless `--web.enable-pprof` is set.
 - The landing page links to metrics and health endpoints.
 
+The telemetry path must be a literal URL path that starts with `/`.
+It must not include whitespace, query strings, fragments, or Go `http.ServeMux` wildcards.
+`/healthz` and `/debug/pprof/*` are reserved for built-in handlers and cannot be used as telemetry paths.
+
 `/healthz` reflects process health only.
 Domain-source health belongs in feature collectors.
+
+## Public API Stability
+
+The public extension surface is:
+
+- `Main`, `MainFromProject`, `RunCLI`, and `RunCLIFromProject`
+- `Config`, `ConfigFromProject`, and `ConfigForProject`
+- `Options`, `Run`, `MustRun`, `NewServer`, and `NewServerChecked`
+- `HandlerOptions`, `NewHandler`, and `NewHandlerChecked`
+- `Feature`, `FeatureContext`, and `CollectorFeature`
+- `NamedFeature`, `RuntimeConfigReporter`, and `DefaultListenAddressProvider`
+- `NewRegistry` and `RegisterCollectors`
+- `ExporterNameFromProject` and `DescriptionFromProject`
+- `HydrateVersionMetadata` and `ResolveVersionMetadata`
+
+`NewHandler` is a lower-level constructor for embedding or focused tests.
+Production entrypoints should prefer `RunCLI`, `Run`, or `NewServerChecked`, which apply option normalization and telemetry-path validation before constructing handlers.
+`NewServer` keeps its original no-error signature and normalizes options, but callers that need explicit errors instead of `http.ServeMux` panics should use `NewHandlerChecked` or `NewServerChecked`.
+
+Concrete exporters should treat unexported functions and types as internal implementation details.
+Breaking changes to the exported extension surface should be released with a major version bump.
 
 ## Metric Ownership
 

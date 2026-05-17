@@ -1,10 +1,13 @@
 package exporter
 
 import (
+	"errors"
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )
@@ -60,6 +63,60 @@ func TestRegisterCollectorsSkipsNilCollectors(t *testing.T) {
 	if !hasMetricFamily(families, "template_nil_skip_value") {
 		t.Fatal("Gather() missing template_nil_skip_value")
 	}
+}
+
+func TestNewRegistryUsesDefaultNamespaceAndSkipsNilFeatures(t *testing.T) {
+	t.Parallel()
+
+	registry, err := NewRegistry("", nil, nil)
+	if err != nil {
+		t.Fatalf("NewRegistry() error = %v, want nil", err)
+	}
+
+	families, err := registry.Gather()
+	if err != nil {
+		t.Fatalf("Gather() error = %v, want nil", err)
+	}
+	if !hasMetricFamily(families, "template_exporter_build_info") {
+		t.Fatal("Gather() missing template_exporter_build_info")
+	}
+}
+
+func TestNewRegistryWrapsFeatureRegistrationError(t *testing.T) {
+	t.Parallel()
+
+	wantErr := errors.New("registration failed")
+	feature := CollectorFeature{
+		Name: "broken",
+		RegisterCollectorsFunc: func(ctx FeatureContext, registry *prometheus.Registry) error {
+			return wantErr
+		},
+	}
+
+	_, err := NewRegistry("demo_exporter", nil, feature)
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("NewRegistry() error = %v, want wrapped %v", err, wantErr)
+	}
+	if !strings.Contains(err.Error(), `register feature "broken"`) {
+		t.Fatalf("NewRegistry() error = %q, want feature name context", err.Error())
+	}
+}
+
+func TestFeatureNameReturnsEmptyForUnnamedFeature(t *testing.T) {
+	t.Parallel()
+
+	feature := unnamedFeature{}
+	if got := featureName(feature); got != "" {
+		t.Fatalf("featureName() = %q, want empty string", got)
+	}
+}
+
+type unnamedFeature struct{}
+
+func (unnamedFeature) RegisterFlags(app *kingpin.Application) {}
+
+func (unnamedFeature) RegisterCollectors(ctx FeatureContext, registry *prometheus.Registry) error {
+	return nil
 }
 
 func hasMetricFamily(families []*dto.MetricFamily, name string) bool {

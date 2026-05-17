@@ -2,22 +2,31 @@
 
 image: golang:1.26
 
+variables:
+  COVERAGE_THRESHOLD: "90.0"
+
 stages:
   - test
   - build
 
 test:
   stage: test
+  before_script:
+    - command -v make >/dev/null || (apt-get update && apt-get install -y --no-install-recommends make)
   script:
-    - test -z "$(gofmt -l $(go list -f '{{range .GoFiles}}{{$.Dir}}/{{.}} {{end}}{{range .TestGoFiles}}{{$.Dir}}/{{.}} {{end}}' ./... | tr '\n' ' '))"
-    - go vet ./...
-    - go test -race ./...
+    - make check GO=go COVERAGE_THRESHOLD="$COVERAGE_THRESHOLD"
+  coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
+  artifacts:
+    when: always
+    paths:
+      - coverage.out
+      - coverage.txt
+    expire_in: 1 week
 
-compile:
+binary-build:
   stage: build
   script:
-    - mkdir -p dist
-    - VERSION_VALUE="${CI_COMMIT_TAG:-${CI_COMMIT_REF_NAME:-dev}}"
+    - VERSION_VALUE="ci"
     - BRANCH_VALUE="${CI_COMMIT_BRANCH:-${CI_COMMIT_REF_NAME:-detached}}"
     - REVISION_VALUE="${CI_COMMIT_SHORT_SHA:-${CI_COMMIT_SHA:-dev}}"
     - BUILD_USER_VALUE="${GITLAB_USER_LOGIN:-gitlab-ci}"
@@ -31,11 +40,9 @@ compile:
       -X github.com/prometheus/common/version.Revision=${REVISION_VALUE}
       -X github.com/prometheus/common/version.BuildUser=${BUILD_USER_VALUE}
       -X github.com/prometheus/common/version.BuildDate=${BUILD_DATE_VALUE}"
-      -o dist/prometheus-template-exporter
+      -o /tmp/prometheus-template-exporter
       ./cmd
-  artifacts:
-    paths:
-      - dist
+    - /tmp/prometheus-template-exporter --version
 
 docker-build:
   stage: build
@@ -47,7 +54,7 @@ docker-build:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
   script:
-    - VERSION_VALUE="${CI_COMMIT_TAG:-${CI_COMMIT_REF_NAME:-dev}}"
+    - VERSION_VALUE="ci"
     - BRANCH_VALUE="${CI_COMMIT_BRANCH:-${CI_COMMIT_REF_NAME:-detached}}"
     - REVISION_VALUE="${CI_COMMIT_SHORT_SHA:-${CI_COMMIT_SHA:-dev}}"
     - BUILD_USER_VALUE="${GITLAB_USER_LOGIN:-gitlab-ci}"
