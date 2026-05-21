@@ -35,8 +35,13 @@ jobs:
 
       - name: Verify module files
         run: |
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          cp go.mod "$tmp/go.mod"
+          cp go.sum "$tmp/go.sum"
           go mod tidy
-          git diff --exit-code -- go.mod go.sum
+          diff -u "$tmp/go.mod" go.mod
+          diff -u "$tmp/go.sum" go.sum
 
       - name: Check formatting
         run: make fmt-check GO=go GOFMT=gofmt
