@@ -3,6 +3,7 @@ GOFMT ?= gofmt
 DOCKER ?= docker
 STATICCHECK_VERSION ?= v0.7.0
 STATICCHECK ?= $(GO) run honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION)
+STATICCHECK_GOFLAGS ?= -buildvcs=false
 COVERAGE_PROFILE ?= coverage.out
 COVERAGE_REPORT ?= coverage.txt
 COVERAGE_THRESHOLD ?= 90.0
@@ -30,7 +31,7 @@ vet: ## Run go vet.
 	$(GO) vet ./...
 
 staticcheck: ## Run staticcheck.
-	$(STATICCHECK) ./...
+	GOFLAGS="$(strip $(GOFLAGS) $(STATICCHECK_GOFLAGS))" $(STATICCHECK) ./...
 
 test: ## Run Go tests.
 	$(GO) test ./...
