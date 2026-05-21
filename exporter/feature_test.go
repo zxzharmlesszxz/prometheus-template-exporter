@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -125,4 +126,91 @@ func TestRegisterCollectorsReturnsDuplicateCollectorError(t *testing.T) {
 	if err == nil {
 		t.Fatal("RegisterCollectors() error = nil, want duplicate collector error")
 	}
+}
+
+func TestRegisterAndStartCollectorsRegistersAndStarts(t *testing.T) {
+	t.Parallel()
+
+	registry := prometheus.NewRegistry()
+	collector := &startableTestCollector{
+		collector: newConstCollector("startable_feature_value", "Startable feature value", 1),
+	}
+	ctx := context.WithValue(context.Background(), testContextKey{}, "value")
+
+	if err := RegisterAndStartCollectors(ctx, registry, collector); err != nil {
+		t.Fatalf("RegisterAndStartCollectors() error = %v, want nil", err)
+	}
+	if collector.startCount != 1 {
+		t.Fatalf("startCount = %d, want 1", collector.startCount)
+	}
+	if collector.ctx != ctx {
+		t.Fatal("Start() received different context")
+	}
+
+	families, err := registry.Gather()
+	if err != nil {
+		t.Fatalf("Gather() error = %v, want nil", err)
+	}
+	if !hasMetricFamily(families, "startable_feature_value") {
+		t.Fatal("Gather() missing startable_feature_value")
+	}
+}
+
+func TestRegisterAndStartCollectorsUsesBackgroundForNilContext(t *testing.T) {
+	t.Parallel()
+
+	collector := &startableTestCollector{
+		collector: newConstCollector("startable_nil_context_value", "Startable nil context value", 1),
+	}
+	var nilContext context.Context
+	if err := RegisterAndStartCollectors(nilContext, prometheus.NewRegistry(), collector); err != nil {
+		t.Fatalf("RegisterAndStartCollectors() error = %v, want nil", err)
+	}
+	if collector.ctx == nil {
+		t.Fatal("Start() context = nil, want background context")
+	}
+}
+
+func TestRegisterAndStartCollectorsDoesNotStartOnRegistrationError(t *testing.T) {
+	t.Parallel()
+
+	registry := prometheus.NewRegistry()
+	first := &startableTestCollector{
+		collector: newConstCollector("duplicate_startable_value", "Duplicate startable value", 1),
+	}
+	second := &startableTestCollector{
+		collector: newConstCollector("duplicate_startable_value", "Duplicate startable value", 2),
+	}
+
+	err := RegisterAndStartCollectors(context.Background(), registry, first, second)
+	if err == nil {
+		t.Fatal("RegisterAndStartCollectors() error = nil, want duplicate collector error")
+	}
+	if first.startCount != 0 {
+		t.Fatalf("first startCount = %d, want 0", first.startCount)
+	}
+	if second.startCount != 0 {
+		t.Fatalf("second startCount = %d, want 0", second.startCount)
+	}
+}
+
+type testContextKey struct{}
+
+type startableTestCollector struct {
+	collector  prometheus.Collector
+	startCount int
+	ctx        context.Context
+}
+
+func (c *startableTestCollector) Describe(ch chan<- *prometheus.Desc) {
+	c.collector.Describe(ch)
+}
+
+func (c *startableTestCollector) Collect(ch chan<- prometheus.Metric) {
+	c.collector.Collect(ch)
+}
+
+func (c *startableTestCollector) Start(ctx context.Context) {
+	c.startCount++
+	c.ctx = ctx
 }

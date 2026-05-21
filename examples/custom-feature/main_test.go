@@ -5,9 +5,9 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
-	dto "github.com/prometheus/client_model/go"
 
 	template "github.com/zxzharmlesszxz/prometheus-template-exporter/exporter"
+	"github.com/zxzharmlesszxz/prometheus-template-exporter/exporter/exportertest"
 )
 
 func TestFeatureRegistersDemoCollector(t *testing.T) {
@@ -26,14 +26,8 @@ func TestFeatureRegistersDemoCollector(t *testing.T) {
 		t.Fatalf("RegisterCollectors() error = %v, want nil", err)
 	}
 
-	families, err := registry.Gather()
-	if err != nil {
-		t.Fatalf("Gather() error = %v, want nil", err)
-	}
-	metric := findMetricFamily(families, "demo_exporter_demo_info")
-	if metric == nil {
-		t.Fatal("Gather() missing demo_exporter_demo_info")
-	}
+	families := exportertest.Gather(t, registry)
+	metric := exportertest.MetricFamily(t, families, "demo_exporter_demo_info")
 	if got := metric.GetMetric()[0].GetGauge().GetValue(); got != 1 {
 		t.Fatalf("demo_exporter_demo_info = %v, want 1", got)
 	}
@@ -59,13 +53,4 @@ func TestFeatureRuntimeConfigAndDefaultListenAddress(t *testing.T) {
 	if len(runtimeConfig) != 2 || runtimeConfig[0] != "demo_target" || runtimeConfig[1] != "node-b" {
 		t.Fatalf("RuntimeConfig() = %v, want [demo_target node-b]", runtimeConfig)
 	}
-}
-
-func findMetricFamily(families []*dto.MetricFamily, name string) *dto.MetricFamily {
-	for _, family := range families {
-		if family.GetName() == name {
-			return family
-		}
-	}
-	return nil
 }

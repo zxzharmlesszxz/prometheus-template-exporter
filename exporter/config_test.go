@@ -113,6 +113,9 @@ func TestDescriptionFromProject(t *testing.T) {
 		{project: "", want: defaultDescription},
 		{project: "  ", want: defaultDescription},
 		{project: "example.com/team/custom-exporter", want: "Custom Exporter"},
+		{project: "example.com/team/prometheus-pkg-exporter", want: "Prometheus Package Exporter"},
+		{project: "example.com/team/prometheus-ssl-exporter", want: "Prometheus SSL Exporter"},
+		{project: "example.com/team/prometheus-tls-api-exporter", want: "Prometheus TLS API Exporter"},
 		{project: "multi_part.name", want: "Multi Part Name"},
 		{project: "example.com/team/прометей-exporter", want: "Прометей Exporter"},
 	}

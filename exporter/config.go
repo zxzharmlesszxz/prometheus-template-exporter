@@ -75,12 +75,40 @@ func DescriptionFromProject(projectName string) string {
 }
 
 func titleProjectPart(part string) string {
+	if acronym, ok := projectAcronyms[strings.ToLower(part)]; ok {
+		return acronym
+	}
+
 	runes := []rune(part)
 	if len(runes) == 0 {
 		return ""
 	}
 	runes[0] = unicode.ToUpper(runes[0])
 	return string(runes)
+}
+
+var projectAcronyms = map[string]string{
+	"api":   "API",
+	"ca":    "CA",
+	"cli":   "CLI",
+	"cpu":   "CPU",
+	"dns":   "DNS",
+	"http":  "HTTP",
+	"https": "HTTPS",
+	"id":    "ID",
+	"ip":    "IP",
+	"json":  "JSON",
+	"pkg":   "Package",
+	"sql":   "SQL",
+	"ssh":   "SSH",
+	"ssl":   "SSL",
+	"tcp":   "TCP",
+	"tls":   "TLS",
+	"udp":   "UDP",
+	"uri":   "URI",
+	"url":   "URL",
+	"xml":   "XML",
+	"yaml":  "YAML",
 }
 
 func (c Config) normalized() Config {

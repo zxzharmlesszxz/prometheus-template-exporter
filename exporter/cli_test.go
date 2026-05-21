@@ -168,6 +168,68 @@ func preserveVersionMetadata(t *testing.T) {
 	})
 }
 
+func TestMainFromProjectUsesExecutableNameAndModuleMetadata(t *testing.T) {
+	preserveVersionMetadata(t)
+
+	originalArgs := os.Args
+	os.Args = []string{
+		"/usr/local/bin/custom-template-exporter",
+		"--log.level=error",
+	}
+	t.Cleanup(func() {
+		os.Args = originalArgs
+	})
+
+	feature := CollectorFeature{
+		Name: "from_project",
+		CollectorsFunc: func(ctx FeatureContext) ([]prometheus.Collector, error) {
+			if ctx.Namespace != "template_exporter" {
+				t.Fatalf("FeatureContext.Namespace = %q, want %q", ctx.Namespace, "template_exporter")
+			}
+			return []prometheus.Collector{
+				newConstCollector(ctx.Namespace+"_from_project_value", "From project value", 4),
+			}, nil
+		},
+	}
+
+	called := false
+	stubListenAndServe(t, func(srv *http.Server, _ *web.FlagConfig, _ *slog.Logger) error {
+		called = true
+
+		req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+		rec := httptest.NewRecorder()
+		srv.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET /metrics status = %d, want %d", rec.Code, http.StatusOK)
+		}
+		if !strings.Contains(rec.Body.String(), "template_exporter_from_project_value 4") {
+			t.Fatalf("GET /metrics body missing feature metric: %s", rec.Body.String())
+		}
+
+		req = httptest.NewRequest(http.MethodGet, "/", nil)
+		rec = httptest.NewRecorder()
+		srv.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET / status = %d, want %d", rec.Code, http.StatusOK)
+		}
+		body := rec.Body.String()
+		if !strings.Contains(body, "custom-template-exporter") {
+			t.Fatalf("GET / body missing executable name: %s", body)
+		}
+		if !strings.Contains(body, "Prometheus Template Exporter") {
+			t.Fatalf("GET / body missing description: %s", body)
+		}
+
+		return nil
+	})
+
+	MainFromProject(feature)
+
+	if !called {
+		t.Fatal("listenAndServe was not called")
+	}
+}
+
 func TestMainForProject(t *testing.T) {
 	preserveVersionMetadata(t)
 

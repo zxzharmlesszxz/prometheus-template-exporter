@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -26,6 +27,11 @@ type RuntimeConfigReporter interface {
 
 type DefaultListenAddressProvider interface {
 	DefaultListenAddress() string
+}
+
+type StartableCollector interface {
+	prometheus.Collector
+	Start(context.Context)
 }
 
 type FeatureContext struct {
@@ -86,6 +92,26 @@ func RegisterCollectors(registry *prometheus.Registry, collectors ...prometheus.
 		if err := registry.Register(collector); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func RegisterAndStartCollectors(ctx context.Context, registry *prometheus.Registry, collectors ...StartableCollector) error {
+	registered := make([]StartableCollector, 0, len(collectors))
+	for _, collector := range collectors {
+		if collector == nil {
+			continue
+		}
+		if err := registry.Register(collector); err != nil {
+			return err
+		}
+		registered = append(registered, collector)
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	for _, collector := range registered {
+		collector.Start(ctx)
 	}
 	return nil
 }

@@ -4,13 +4,20 @@
 // The package owns common exporter behavior: command-line bootstrap, standard
 // web and logging flags, exporter-toolkit HTTP serving, health and metrics
 // handlers, Prometheus registry wiring, standard Go/process/build collectors,
-// and version metadata hydration.
+// optional typed snapshot refresh helpers, and version metadata hydration.
+// Small metric value helpers and exporter-focused test helpers live here too,
+// so concrete exporters do not need to copy boilerplate for common assertions
+// or timestamp/boolean gauge conversion.
 //
 // Concrete exporters provide domain behavior by implementing Feature and
 // passing one or more features to MainFromProject, MainForProject, Main,
 // RunCLIFromProject, or RunCLI. A feature registers its own flags and
 // collectors; optional interfaces add feature names to logs, report runtime
 // configuration fields, or override the default listen address.
+// SnapshotCollector is available for features that need a background refresh
+// worker, cached scrape-time snapshots, and common collection health metrics.
+// FileScrapeMetrics is available for file-backed scrape-time collectors that
+// share mtime, scrape duration, and read or parse error counters.
 //
 // For programmatic embedding, Run and NewServer construct the same registry and
 // HTTP stack without using process arguments. NewServerChecked and

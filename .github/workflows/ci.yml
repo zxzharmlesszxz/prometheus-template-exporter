@@ -11,20 +11,24 @@ permissions:
 env:
   COVERAGE_THRESHOLD: "90.0"
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   module-checks:
     name: Module checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: golang:1.26.3-alpine
 
     steps:
+      - name: Prepare Alpine
+        shell: sh
+        run: apk add --no-cache bash build-base git make
+
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-          cache: true
 
       - name: Download modules
         run: go mod download

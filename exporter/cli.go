@@ -28,7 +28,9 @@ func Main(cfg Config) {
 }
 
 func MainFromProject(features ...Feature) {
-	Main(ConfigFromProject(features...))
+	cfg := ConfigFromProject(features...)
+	cfg.Name = executableName(os.Args, cfg.Name)
+	Main(cfg)
 }
 
 // MainForProject runs a concrete exporter with explicit project metadata.

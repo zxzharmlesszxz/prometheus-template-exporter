@@ -23,7 +23,7 @@ Domain logic is supplied by external `exporter.Feature` implementations.
    - `*_build_info`
    - Go runtime collectors
    - process collectors
-5. Each feature registers its own collectors.
+5. Each feature registers its own collectors directly or wraps domain collection in `SnapshotCollector`.
 6. The HTTP server exposes the registry on the configured telemetry path.
 
 ## Extension Contract
@@ -47,6 +47,8 @@ Optional interfaces:
   Provides the feature's default `--web.listen-address` value.
 
 The helper `CollectorFeature` can be used when a feature only needs callbacks instead of a dedicated type.
+The helper `SnapshotCollector` can be used when a feature needs a typed snapshot cache, background refresh loop, and common collection health metrics.
+The package also exposes small value/lifecycle helpers (`BoolFloat`, `UnixTimestamp`, `FileMTimeSeconds`, `FileScrapeMetrics`, `NormalizeDuration`, and `RegisterAndStartCollectors`) plus the `exporter/exportertest` package for shared exporter test assertions.
 
 ## Common HTTP Semantics
 
@@ -73,11 +75,15 @@ The public extension surface is:
 - `Config`, `ConfigFromProject`, and `ConfigForProject`
 - `Options`, `Run`, `MustRun`, `NewServer`, and `NewServerChecked`
 - `HandlerOptions`, `NewHandler`, and `NewHandlerChecked`
-- `Feature`, `FeatureContext`, and `CollectorFeature`
+- `Feature`, `FeatureContext`, `CollectorFeature`, and `StartableCollector`
+- `Snapshotter`, `SnapshotStatus`, `SnapshotCollectorOptions`, `SnapshotCollector`, and `DefaultSnapshotRefreshInterval`
+- `BoolFloat`, `UnixTimestamp`, `FileMTimeSeconds`, `FileScrapeMetrics`, `Uint64Counter`, and `NormalizeDuration`
 - `NamedFeature`, `RuntimeConfigReporter`, and `DefaultListenAddressProvider`
-- `NewRegistry` and `RegisterCollectors`
+- `NewRegistry`, `RegisterCollectors`, and `RegisterAndStartCollectors`
 - `ExporterNameFromProject` and `DescriptionFromProject`
 - `HydrateVersionMetadata` and `ResolveVersionMetadata`
+
+The `exporter/exportertest` subpackage is public test support for downstream exporters.
 
 `NewHandler` is a lower-level constructor for embedding or focused tests.
 Production entrypoints should prefer `RunCLI`, `Run`, or `NewServerChecked`, which apply option normalization and telemetry-path validation before constructing handlers.
@@ -93,6 +99,7 @@ The template owns only common exporter metrics:
 - `*_build_info`
 - Go runtime metrics
 - process metrics
+- `*_last_collection_*` metrics when a feature opts into `SnapshotCollector`
 
 Every business metric and domain diagnostic metric is owned by the concrete feature.
 For example:
@@ -105,6 +112,7 @@ For example:
 
 The template fails startup when a feature cannot register its collectors.
 Runtime scrape failures are domain-specific and should be represented by feature collectors.
+When a feature uses `SnapshotCollector`, the template stores the latest typed snapshot and emits common collection timestamps and success state from the feature-provided `SnapshotStatus`.
 
 For example, a feature can:
 

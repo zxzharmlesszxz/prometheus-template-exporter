@@ -10,6 +10,8 @@ This repository owns the stable exporter shell:
 - `/metrics`, `/healthz`, landing page, and optional pprof endpoints
 - Prometheus registry wiring
 - `build_info`, Go runtime, and process collectors
+- optional snapshot cache and background refresh collector helper
+- small helpers for common metric values and exporter tests
 - version metadata hydration from linker flags or Go build info
 
 Concrete exporters add domain behavior through `exporter.Feature` implementations in their own repositories.
@@ -63,11 +65,50 @@ func main() {
 
 A compiling example feature is available in `examples/custom-feature`.
 
+## Snapshot Collectors
+
+Features that periodically read external state can use `SnapshotCollector` instead of reimplementing refresh and cache logic.
+The feature supplies a typed `Snapshotter`, a small status adapter, and domain metric callbacks:
+
+```go
+collector := template.NewSnapshotCollector(template.SnapshotCollectorOptions[DomainSnapshot]{
+	Namespace:       ctx.Namespace,
+	Logger:          ctx.Logger,
+	Snapshotter:     domainSnapshotter,
+	RefreshInterval: refreshInterval,
+	StatusFunc: func(snapshot DomainSnapshot) template.SnapshotStatus {
+		return template.SnapshotStatus{
+			AttemptTime: snapshot.AttemptTime,
+			Success:     snapshot.Success,
+		}
+	},
+	DescribeFunc: describeDomainMetrics,
+	CollectFunc:  collectDomainMetrics,
+})
+```
+
+`SnapshotCollector` owns the background refresh worker, scrape-time cache fallback, and common collection metrics.
+The concrete exporter still owns the domain snapshot type and all business metrics.
+
+## Utility Helpers
+
+Concrete exporters can reuse small metric helpers instead of carrying local copies:
+
+- `BoolFloat(bool)` for `0`/`1` gauge values
+- `UnixTimestamp(time.Time)` for timestamp metrics with zero-time handling
+- `FileMTimeSeconds(path)` for file mtime gauges that return `0` when the file cannot be statted
+- `FileScrapeMetrics` for file-backed collectors that expose mtime, scrape duration, and read/parse counters
+- `NormalizeDuration(value, fallback)` for duration flags where non-positive values should fall back to defaults
+- `RegisterAndStartCollectors(ctx, registry, collectors...)` for collectors with a background `Start(context.Context)` lifecycle
+
+Tests can import `github.com/zxzharmlesszxz/prometheus-template-exporter/exporter/exportertest` for common registry/gather helpers, metric lookup, metric value assertions, histogram lookup, and polling metrics that are updated by background refresh loops.
+
 `ConfigFromProject` derives exporter name and metric namespace from the Go module/project name.
 For example, `prometheus-demo-exporter` becomes `demo_exporter`.
 The default listen address is taken from the first feature that implements `DefaultListenAddress() string`, otherwise it falls back to `:9900`.
-Use `MainForProject(projectName, description, features...)` when an exporter needs explicit project metadata while still deriving the landing page name from the executable.
-Use `Config{...}` directly only when a concrete exporter needs to override that derived metadata.
+`MainFromProject(features...)` derives metric namespace and description from the Go module path while using the executable file name for CLI usage and the landing page.
+Use `MainForProject(projectName, description, features...)` only when an exporter needs explicit project metadata.
+Use `Config{...}` directly only when a concrete exporter needs lower-level overrides.
 
 ## Applying This To New Exporters
 

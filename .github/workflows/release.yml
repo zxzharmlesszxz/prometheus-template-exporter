@@ -15,22 +15,26 @@ env:
   COVERAGE_THRESHOLD: "90.0"
   SCAFFOLD_REPOSITORY: zxzharmlesszxz/prometheus-exporter-scaffold
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   release:
     name: Release Go module
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: golang:1.26.3-alpine
 
     steps:
+      - name: Prepare Alpine
+        shell: sh
+        run: apk add --no-cache bash build-base git github-cli make
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-          cache: true
 
       - name: Validate release input
         env:
@@ -83,11 +87,17 @@ jobs:
 
   update-scaffold:
     name: Update exporter scaffold
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: golang:1.26.3-alpine
     needs:
       - release
 
     steps:
+      - name: Prepare Alpine
+        shell: sh
+        run: apk add --no-cache bash build-base git github-cli make perl
+
       - name: Validate scaffold token
         env:
           SCAFFOLD_REPO_TOKEN: ${{ secrets.SCAFFOLD_REPO_TOKEN }}
@@ -103,13 +113,6 @@ jobs:
           repository: ${{ env.SCAFFOLD_REPOSITORY }}
           token: ${{ secrets.SCAFFOLD_REPO_TOKEN }}
           path: scaffold
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: scaffold/template/go.mod
-          cache: true
-          cache-dependency-path: scaffold/template/go.sum
 
       - name: Update framework version
         working-directory: scaffold
