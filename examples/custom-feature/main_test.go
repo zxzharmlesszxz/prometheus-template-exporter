@@ -6,8 +6,8 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 
-	template "github.com/zxzharmlesszxz/prometheus-template-exporter/exporter"
-	"github.com/zxzharmlesszxz/prometheus-template-exporter/exporter/exportertest"
+	framework "github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter"
+	"github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter/exportertest"
 )
 
 func TestFeatureRegistersDemoCollector(t *testing.T) {
@@ -21,7 +21,7 @@ func TestFeatureRegistersDemoCollector(t *testing.T) {
 	}
 
 	registry := prometheus.NewRegistry()
-	err := feature.RegisterCollectors(template.FeatureContext{Namespace: "demo_exporter"}, registry)
+	err := feature.RegisterCollectors(framework.FeatureContext{Namespace: "demo_exporter"}, registry)
 	if err != nil {
 		t.Fatalf("RegisterCollectors() error = %v, want nil", err)
 	}

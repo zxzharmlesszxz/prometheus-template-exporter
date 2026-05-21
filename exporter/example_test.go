@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"github.com/zxzharmlesszxz/prometheus-template-exporter/exporter"
+	"github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter"
 )
 
 func ExampleConfigForProject() {

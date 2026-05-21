@@ -2,7 +2,7 @@
 
 ## Overview
 
-`prometheus-template-exporter` is a reusable exporter shell.
+`prometheus-exporter-framework` is a reusable exporter shell.
 
 It intentionally does not know about any business domain such as Debian packages, Puppet agent files, or Puppetfile parsing.
 Domain logic is supplied by external `exporter.Feature` implementations.
@@ -17,8 +17,8 @@ Domain logic is supplied by external `exporter.Feature` implementations.
 ## Data Flow
 
 1. A concrete exporter calls `exporter.MainFromProject(features...)`, `exporter.MainForProject(projectName, description, features...)`, or `exporter.Main(exporter.Config{...})` when it needs explicit metadata overrides.
-2. The template registers common CLI flags and asks each feature to register its own flags.
-3. After parsing, the template creates the logger, runtime options, and Prometheus registry.
+2. The framework registers common CLI flags and asks each feature to register its own flags.
+3. After parsing, the framework creates the logger, runtime options, and Prometheus registry.
 4. The registry always receives:
    - `*_build_info`
    - Go runtime collectors
@@ -94,7 +94,7 @@ Breaking changes to the exported extension surface should be released with a maj
 
 ## Metric Ownership
 
-The template owns only common exporter metrics:
+The framework owns only common exporter metrics:
 
 - `*_build_info`
 - Go runtime metrics
@@ -110,9 +110,9 @@ For example:
 
 ## Failure Semantics
 
-The template fails startup when a feature cannot register its collectors.
+The framework fails startup when a feature cannot register its collectors.
 Runtime scrape failures are domain-specific and should be represented by feature collectors.
-When a feature uses `SnapshotCollector`, the template stores the latest typed snapshot and emits common collection timestamps and success state from the feature-provided `SnapshotStatus`.
+When a feature uses `SnapshotCollector`, the framework stores the latest typed snapshot and emits common collection timestamps and success state from the feature-provided `SnapshotStatus`.
 
 For example, a feature can:
 
@@ -121,4 +121,4 @@ For example, a feature can:
 - omit business metrics when its source is unreadable
 - increment read or parse error counters
 
-The template does not impose one policy because the existing exporters use different failure semantics.
+The framework does not impose one policy because the existing exporters use different failure semantics.

@@ -7,7 +7,7 @@ STATICCHECK_GOFLAGS ?= -buildvcs=false
 COVERAGE_PROFILE ?= coverage.out
 COVERAGE_REPORT ?= coverage.txt
 COVERAGE_THRESHOLD ?= 90.0
-DOCKER_IMAGE ?= prometheus-template-exporter:smoke
+DOCKER_IMAGE ?= prometheus-exporter-framework:smoke
 DOCKER_HTTP_IMAGE ?= busybox:1.36
 SMOKE_VERSION ?= v9.8.7
 SMOKE_BRANCH ?= smoke-branch
@@ -87,7 +87,7 @@ docker-smoke-image: ## Smoke-test an already built Docker image.
 		sleep 1; \
 	done; \
 	metrics="$$( $(DOCKER) run --rm --network container:$$cid $(DOCKER_HTTP_IMAGE) wget -qO- http://127.0.0.1:9900/metrics )"; \
-	echo "$$metrics" | grep -F "template_exporter_build_info" >/dev/null; \
+	echo "$$metrics" | grep -F "exporter_framework_build_info" >/dev/null; \
 	echo "$$metrics" | grep -F 'version="$(SMOKE_VERSION)"' >/dev/null; \
 	echo "$$metrics" | grep -F 'branch="$(SMOKE_BRANCH)"' >/dev/null; \
 	echo "$$metrics" | grep -F 'revision="$(SMOKE_REVISION)"' >/dev/null

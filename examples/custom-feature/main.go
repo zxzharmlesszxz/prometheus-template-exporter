@@ -4,7 +4,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 
-	template "github.com/zxzharmlesszxz/prometheus-template-exporter/exporter"
+	framework "github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter"
 )
 
 type Feature struct {
@@ -19,7 +19,7 @@ func (f *Feature) DefaultListenAddress() string {
 	return ":9901"
 }
 
-func (f *Feature) RegisterCollectors(ctx template.FeatureContext, registry *prometheus.Registry) error {
+func (f *Feature) RegisterCollectors(ctx framework.FeatureContext, registry *prometheus.Registry) error {
 	target := "local"
 	if f.target != nil {
 		target = *f.target
@@ -31,7 +31,7 @@ func (f *Feature) RegisterCollectors(ctx template.FeatureContext, registry *prom
 		[]string{"target"},
 		nil,
 	)
-	return template.RegisterCollectors(registry, demoCollector{
+	return framework.RegisterCollectors(registry, demoCollector{
 		desc:   desc,
 		target: target,
 	})
@@ -59,5 +59,5 @@ func (c demoCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func main() {
-	template.MainFromProject(&Feature{})
+	framework.MainFromProject(&Feature{})
 }

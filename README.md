@@ -1,6 +1,6 @@
-# prometheus-template-exporter
+# prometheus-exporter-framework
 
-Reusable Go template for Prometheus exporters.
+Reusable Go framework for Prometheus exporters.
 
 This repository owns the stable exporter shell:
 
@@ -34,7 +34,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 
-	template "github.com/zxzharmlesszxz/prometheus-template-exporter/exporter"
+	framework "github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter"
 )
 
 type Feature struct {
@@ -49,9 +49,9 @@ func (f *Feature) DefaultListenAddress() string {
 	return ":9901"
 }
 
-func (f *Feature) RegisterCollectors(ctx template.FeatureContext, registry *prometheus.Registry) error {
+func (f *Feature) RegisterCollectors(ctx framework.FeatureContext, registry *prometheus.Registry) error {
 	collector := NewDomainCollector(ctx.Logger, *f.inputPath)
-	return template.RegisterCollectors(registry, collector)
+	return framework.RegisterCollectors(registry, collector)
 }
 
 func (f *Feature) RuntimeConfig() []any {
@@ -59,7 +59,7 @@ func (f *Feature) RuntimeConfig() []any {
 }
 
 func main() {
-	template.MainFromProject(&Feature{})
+	framework.MainFromProject(&Feature{})
 }
 ```
 
@@ -71,13 +71,13 @@ Features that periodically read external state can use `SnapshotCollector` inste
 The feature supplies a typed `Snapshotter`, a small status adapter, and domain metric callbacks:
 
 ```go
-collector := template.NewSnapshotCollector(template.SnapshotCollectorOptions[DomainSnapshot]{
+collector := framework.NewSnapshotCollector(framework.SnapshotCollectorOptions[DomainSnapshot]{
 	Namespace:       ctx.Namespace,
 	Logger:          ctx.Logger,
 	Snapshotter:     domainSnapshotter,
 	RefreshInterval: refreshInterval,
-	StatusFunc: func(snapshot DomainSnapshot) template.SnapshotStatus {
-		return template.SnapshotStatus{
+	StatusFunc: func(snapshot DomainSnapshot) framework.SnapshotStatus {
+		return framework.SnapshotStatus{
 			AttemptTime: snapshot.AttemptTime,
 			Success:     snapshot.Success,
 		}
@@ -101,7 +101,7 @@ Concrete exporters can reuse small metric helpers instead of carrying local copi
 - `NormalizeDuration(value, fallback)` for duration flags where non-positive values should fall back to defaults
 - `RegisterAndStartCollectors(ctx, registry, collectors...)` for collectors with a background `Start(context.Context)` lifecycle
 
-Tests can import `github.com/zxzharmlesszxz/prometheus-template-exporter/exporter/exportertest` for common registry/gather helpers, metric lookup, metric value assertions, histogram lookup, and polling metrics that are updated by background refresh loops.
+Tests can import `github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter/exportertest` for common registry/gather helpers, metric lookup, metric value assertions, histogram lookup, and polling metrics that are updated by background refresh loops.
 
 `ConfigFromProject` derives exporter name and metric namespace from the Go module/project name.
 For example, `prometheus-demo-exporter` becomes `demo_exporter`.
@@ -117,23 +117,23 @@ Each exporter can become a thin concrete repository:
 - `prometheus-demo-exporter`
   - place specific code at `internal/*`
   - exposes a feature that registers
-  - `main.go` only calls `template.MainFromProject(...)` or `template.MainForProject(...)`
+  - `main.go` only calls `framework.MainFromProject(...)` or `framework.MainForProject(...)`
 
-Add this template module as a dependency:
+Add this framework module as a dependency:
 
 ```bash
-go get github.com/zxzharmlesszxz/prometheus-template-exporter@latest
+go get github.com/zxzharmlesszxz/prometheus-exporter-framework@latest
 ```
 
 For reproducible builds, pin a released version:
 
 ```go
-require github.com/zxzharmlesszxz/prometheus-template-exporter v*.*.*
+require github.com/zxzharmlesszxz/prometheus-exporter-framework v*.*.*
 ```
 
 ## Built-In Flags
 
-Every exporter built on this template gets:
+Every exporter built on this framework gets:
 
 ```bash
 --web.listen-address
@@ -151,7 +151,7 @@ The concrete feature decides which domain flags to add.
 
 ## Local Run
 
-Run the template shell:
+Run the framework shell:
 
 ```bash
 go run ./cmd --web.listen-address=:9900
@@ -175,8 +175,8 @@ Endpoints:
 
 ## Grafana Dashboard
 
-`examples/grafana/prometheus-template-exporter-overview.json` is a starter dashboard for common exporter health.
-It uses Prometheus scrape metadata plus the template's Go, process, and `*_build_info` metrics.
+`examples/grafana/prometheus-exporter-framework-overview.json` is a starter dashboard for common exporter health.
+It uses Prometheus scrape metadata plus the framework's Go, process, and `*_build_info` metrics.
 Domain-specific feature dashboards should live in concrete exporter repositories.
 
 ## Tests
@@ -222,10 +222,10 @@ The Dockerfile and CI build inject Prometheus `version` metadata through linker 
 - `BuildUser`
 - `BuildDate`
 
-When linker flags are absent, the template falls back to Go build info and then to `dev`.
+When linker flags are absent, the framework falls back to Go build info and then to `dev`.
 
 ## Requirements
 
 Go 1.26 or newer is required intentionally.
 
-This project is intended as a modern exporter template and does not aim to support legacy Go versions.
+This project is intended as a modern exporter framework and does not aim to support legacy Go versions.

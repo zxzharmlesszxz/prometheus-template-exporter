@@ -173,7 +173,7 @@ func TestMainFromProjectUsesExecutableNameAndModuleMetadata(t *testing.T) {
 
 	originalArgs := os.Args
 	os.Args = []string{
-		"/usr/local/bin/custom-template-exporter",
+		"/usr/local/bin/custom-exporter-framework",
 		"--log.level=error",
 	}
 	t.Cleanup(func() {
@@ -183,8 +183,8 @@ func TestMainFromProjectUsesExecutableNameAndModuleMetadata(t *testing.T) {
 	feature := CollectorFeature{
 		Name: "from_project",
 		CollectorsFunc: func(ctx FeatureContext) ([]prometheus.Collector, error) {
-			if ctx.Namespace != "template_exporter" {
-				t.Fatalf("FeatureContext.Namespace = %q, want %q", ctx.Namespace, "template_exporter")
+			if ctx.Namespace != "exporter_framework" {
+				t.Fatalf("FeatureContext.Namespace = %q, want %q", ctx.Namespace, "exporter_framework")
 			}
 			return []prometheus.Collector{
 				newConstCollector(ctx.Namespace+"_from_project_value", "From project value", 4),
@@ -202,7 +202,7 @@ func TestMainFromProjectUsesExecutableNameAndModuleMetadata(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("GET /metrics status = %d, want %d", rec.Code, http.StatusOK)
 		}
-		if !strings.Contains(rec.Body.String(), "template_exporter_from_project_value 4") {
+		if !strings.Contains(rec.Body.String(), "exporter_framework_from_project_value 4") {
 			t.Fatalf("GET /metrics body missing feature metric: %s", rec.Body.String())
 		}
 
@@ -213,10 +213,10 @@ func TestMainFromProjectUsesExecutableNameAndModuleMetadata(t *testing.T) {
 			t.Fatalf("GET / status = %d, want %d", rec.Code, http.StatusOK)
 		}
 		body := rec.Body.String()
-		if !strings.Contains(body, "custom-template-exporter") {
+		if !strings.Contains(body, "custom-exporter-framework") {
 			t.Fatalf("GET / body missing executable name: %s", body)
 		}
-		if !strings.Contains(body, "Prometheus Template Exporter") {
+		if !strings.Contains(body, "Prometheus Exporter Framework") {
 			t.Fatalf("GET / body missing description: %s", body)
 		}
 
@@ -312,33 +312,33 @@ func TestExecutableName(t *testing.T) {
 	}{
 		{
 			name:     "absolute path",
-			args:     []string{"/usr/local/bin/prometheus-template-exporter"},
-			fallback: "template_exporter",
-			want:     "prometheus-template-exporter",
+			args:     []string{"/usr/local/bin/prometheus-exporter-framework"},
+			fallback: "exporter_framework",
+			want:     "prometheus-exporter-framework",
 		},
 		{
 			name:     "renamed binary",
-			args:     []string{"renamed-template-exporter"},
-			fallback: "template_exporter",
-			want:     "renamed-template-exporter",
+			args:     []string{"renamed-exporter-framework"},
+			fallback: "exporter_framework",
+			want:     "renamed-exporter-framework",
 		},
 		{
 			name:     "missing args",
 			args:     nil,
-			fallback: "template_exporter",
-			want:     "template_exporter",
+			fallback: "exporter_framework",
+			want:     "exporter_framework",
 		},
 		{
 			name:     "empty arg",
 			args:     []string{""},
-			fallback: "template_exporter",
-			want:     "template_exporter",
+			fallback: "exporter_framework",
+			want:     "exporter_framework",
 		},
 		{
 			name:     "blank arg",
 			args:     []string{"   "},
-			fallback: "template_exporter",
-			want:     "template_exporter",
+			fallback: "exporter_framework",
+			want:     "exporter_framework",
 		},
 	} {
 		tc := tc

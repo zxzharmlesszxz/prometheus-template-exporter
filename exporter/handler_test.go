@@ -18,8 +18,8 @@ func TestHandlerServesMetrics(t *testing.T) {
 	}
 
 	handler := NewHandler(HandlerOptions{
-		Name:        "template_exporter",
-		Description: "Template exporter",
+		Name:        "exporter_framework",
+		Description: "Exporter framework",
 		MetricsPath: "/metrics",
 		Registry:    registry,
 		EnablePprof: true,
@@ -101,8 +101,8 @@ func TestHandlerServesLandingPage(t *testing.T) {
 	t.Parallel()
 
 	handler := NewHandler(HandlerOptions{
-		Name:        "template_exporter",
-		Description: "Reusable Prometheus exporter template",
+		Name:        "exporter_framework",
+		Description: "Reusable Prometheus exporter framework",
 		MetricsPath: "/metrics",
 		Registry:    prometheus.NewRegistry(),
 		EnablePprof: true,
@@ -117,7 +117,7 @@ func TestHandlerServesLandingPage(t *testing.T) {
 	}
 	body := rec.Body.String()
 	for _, want := range []string{
-		"Reusable Prometheus exporter template",
+		"Reusable Prometheus exporter framework",
 		"/metrics",
 		"/healthz",
 		"/debug/pprof/heap",

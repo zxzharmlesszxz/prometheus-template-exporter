@@ -77,8 +77,8 @@ func TestNewRegistryUsesDefaultNamespaceAndSkipsNilFeatures(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Gather() error = %v, want nil", err)
 	}
-	if !hasMetricFamily(families, "template_exporter_build_info") {
-		t.Fatal("Gather() missing template_exporter_build_info")
+	if !hasMetricFamily(families, "exporter_framework_build_info") {
+		t.Fatal("Gather() missing exporter_framework_build_info")
 	}
 }
 

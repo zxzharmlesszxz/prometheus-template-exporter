@@ -84,11 +84,11 @@ func TestExporterNameFromProject(t *testing.T) {
 		project string
 		want    string
 	}{
-		{project: "prometheus-template-exporter", want: "template_exporter"},
+		{project: "prometheus-exporter-framework", want: "exporter_framework"},
 		{project: "example.com/team/prometheus-puppetfile-exporter", want: "puppetfile_exporter"},
 		{project: "custom-exporter", want: "custom_exporter"},
 		{project: "123-custom", want: "_123_custom_exporter"},
-		{project: "", want: "template_exporter"},
+		{project: "", want: "exporter_framework"},
 	}
 
 	for _, tc := range tests {

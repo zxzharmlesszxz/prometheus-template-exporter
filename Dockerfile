@@ -20,12 +20,12 @@ RUN go build \
   -X github.com/prometheus/common/version.Revision=${REVISION} \
   -X github.com/prometheus/common/version.BuildUser=${BUILD_USER} \
   -X github.com/prometheus/common/version.BuildDate=${BUILD_DATE}" \
-  -o /out/prometheus-template-exporter \
+  -o /out/prometheus-exporter-framework \
   ./cmd
 
 FROM debian:bookworm-slim
 
-COPY --from=build /out/prometheus-template-exporter /usr/local/bin/prometheus-template-exporter
+COPY --from=build /out/prometheus-exporter-framework /usr/local/bin/prometheus-exporter-framework
 
-ENTRYPOINT ["/usr/local/bin/prometheus-template-exporter"]
+ENTRYPOINT ["/usr/local/bin/prometheus-exporter-framework"]
 CMD ["--web.listen-address=:9900"]

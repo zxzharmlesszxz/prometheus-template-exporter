@@ -1,12 +1,12 @@
 # Maintaining
 
-This repository is a reusable exporter template, not a product binary.
-The main goal is to keep the template safe for downstream exporters to import
+This repository is a reusable exporter framework, not a product binary.
+The main goal is to keep the framework safe for downstream exporters to import
 and copy from.
 
 ## Local Checks
 
-Run the standard maintenance check before changing the template:
+Run the standard maintenance check before changing the framework:
 
 ```bash
 make check
@@ -32,7 +32,7 @@ environment has a Docker daemon.
 
 Downstream exporters may pin this module with `go get ...@vX.Y.Z`, so semver
 tags are still useful for module consumption.
-Those tags do not imply publishing this repository's template binary or Docker
+Those tags do not imply publishing this repository's framework binary or Docker
 image as an end-user release artifact.
 
 Before tagging:

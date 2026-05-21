@@ -1,6 +1,6 @@
 # Metrics
 
-The template exports common Prometheus metrics only.
+The framework exports common Prometheus metrics only.
 Concrete features own their business metrics.
 
 ## Common Metrics
@@ -12,11 +12,11 @@ Concrete features own their business metrics.
 - Labels: provided by `github.com/prometheus/common/version`
 - Notes:
   - metric name is based on `Config.Namespace`
-  - for the default binary the metric is `template_exporter_build_info`
+  - for the default binary the metric is `exporter_framework_build_info`
 
 ### Go Runtime Metrics
 
-The template registers the standard Prometheus Go collector.
+The framework registers the standard Prometheus Go collector.
 Metric names include:
 
 - `go_gc_duration_seconds`
@@ -25,7 +25,7 @@ Metric names include:
 
 ### Process Metrics
 
-The template registers the standard Prometheus process collector.
+The framework registers the standard Prometheus process collector.
 Metric names include:
 
 - `process_cpu_seconds_total`
@@ -43,5 +43,5 @@ Feature-specific source health should be exposed by the feature itself, for exam
 
 ## Business Metrics
 
-This template does not define business metrics.
+This framework does not define business metrics.
 Business metric contracts must be documented by the concrete exporter feature.

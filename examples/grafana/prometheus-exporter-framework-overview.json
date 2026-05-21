@@ -2,7 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "prometheus-template-exporter-overview",
+    "name": "prometheus-exporter-framework-overview",
     "generation": 1,
     "creationTimestamp": "2026-05-18T00:00:00Z",
     "labels": {
@@ -31,7 +31,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Common exporter health dashboard for exporters built with prometheus-template-exporter.",
+    "description": "Common exporter health dashboard for exporters built with prometheus-exporter-framework.",
     "editable": false,
     "elements": {
       "panel-1": {
@@ -2262,7 +2262,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Prometheus Template Exporter Overview",
+    "title": "Prometheus Exporter Framework Overview",
     "variables": [
       {
         "kind": "DatasourceVariable",

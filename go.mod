@@ -1,4 +1,4 @@
-module github.com/zxzharmlesszxz/prometheus-template-exporter
+module github.com/zxzharmlesszxz/prometheus-exporter-framework
 
 go 1.26.0
 

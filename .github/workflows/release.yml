@@ -130,12 +130,12 @@ jobs:
           fi
 
           go mod edit \
-            -require=github.com/zxzharmlesszxz/prometheus-template-exporter@"$VERSION" \
+            -require=github.com/zxzharmlesszxz/prometheus-exporter-framework@"$VERSION" \
             template/go.mod
           (cd template && go mod tidy)
 
           find . -type f \( -name '*.md' -o -name '*.go' -o -name '*.mod' \) -print0 \
-            | xargs -0 perl -0pi -e 's#github\.com/zxzharmlesszxz/prometheus-template-exporter v[0-9A-Za-z.+-]+#github.com/zxzharmlesszxz/prometheus-template-exporter $ENV{VERSION}#g'
+            | xargs -0 perl -0pi -e 's#github\.com/zxzharmlesszxz/prometheus-exporter-framework v[0-9A-Za-z.+-]+#github.com/zxzharmlesszxz/prometheus-exporter-framework $ENV{VERSION}#g'
 
       - name: Verify rendered scaffold
         working-directory: scaffold
@@ -168,7 +168,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          branch="update-template-exporter-${VERSION#v}"
+          branch="update-exporter-framework-${VERSION#v}"
           base="$(gh repo view "$SCAFFOLD_REPOSITORY" --json defaultBranchRef -q .defaultBranchRef.name)"
           git switch -c "$branch"
           git add .
@@ -179,5 +179,5 @@ jobs:
             --repo "$SCAFFOLD_REPOSITORY" \
             --base "$base" \
             --head "$branch" \
-            --title "Update prometheus-template-exporter to $VERSION" \
-            --body "Updates generated exporters to use prometheus-template-exporter $VERSION."
+            --title "Update prometheus-exporter-framework to $VERSION" \
+            --body "Updates generated exporters to use prometheus-exporter-framework $VERSION."

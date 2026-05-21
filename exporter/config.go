@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	defaultExporterName   = "template_exporter"
-	defaultDescription    = "Prometheus exporter template"
+	defaultExporterName   = "exporter_framework"
+	defaultDescription    = "Prometheus exporter framework"
 	defaultListenAddress  = ":9900"
 	defaultTelemetryPath  = "/metrics"
-	defaultLandingName    = "template_exporter"
+	defaultLandingName    = "exporter_framework"
 	defaultProfilingValue = "false"
 )
 
@@ -45,6 +45,9 @@ func ExporterNameFromProject(projectName string) string {
 	name := sanitizeMetricNamespace(base)
 	if name == "" {
 		return defaultExporterName
+	}
+	if name == "exporter_framework" {
+		return name
 	}
 	if !strings.HasSuffix(name, "_exporter") {
 		name += "_exporter"
