@@ -36,6 +36,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Trust checkout directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Validate release input
         env:
           VERSION: ${{ inputs.version }}
@@ -118,6 +121,9 @@ jobs:
           repository: ${{ env.SCAFFOLD_REPOSITORY }}
           token: ${{ secrets.SCAFFOLD_REPO_TOKEN }}
           path: scaffold
+
+      - name: Trust scaffold checkout directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE/scaffold"
 
       - name: Update framework version
         working-directory: scaffold
