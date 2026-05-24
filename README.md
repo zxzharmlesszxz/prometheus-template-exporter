@@ -205,7 +205,7 @@ See `MAINTAINING.md` for maintenance notes.
 ## Releases
 
 Releases are manual because tags are public Go module versions for downstream exporters.
-Pushes and pull requests only run CI checks.
+Pushes and pull requests run CI checks, including a scaffold compatibility check that renders a demo exporter against the current framework checkout.
 
 To publish a module version, run the `Release` workflow from the default branch and enter a tag such as `v0.1.0`.
 The workflow runs `make check`, verifies the scaffold against the current framework checkout, creates an annotated git tag, opens a scaffold dependency update pull request, and only then creates a GitHub Release without binary or Docker artifacts.

@@ -81,6 +81,38 @@ func TestRunBinaryWithoutServerSmoke(t *testing.T) {
 	})
 }
 
+func TestRunBinaryWithPrebuiltBinary(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake shell binary is Unix-only")
+	}
+
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module smoke.test\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+
+	binary := filepath.Join(root, "demo-exporter")
+	if err := os.WriteFile(binary, []byte(fakeBinaryScript()), 0o755); err != nil {
+		t.Fatalf("write fake binary: %v", err)
+	}
+
+	workingDir := filepath.Join(root, "smoke")
+	if err := os.Mkdir(workingDir, 0o755); err != nil {
+		t.Fatalf("make working directory: %v", err)
+	}
+
+	t.Setenv("GO", filepath.Join(root, "missing-go"))
+	t.Setenv("RUN_BINARY_SMOKE", "1")
+	chdir(t, workingDir)
+
+	RunBinary(t, Config{
+		ProjectName:         "demo-exporter",
+		BinaryPath:          "demo-exporter",
+		ForbiddenUsageNames: []string{"demo_exporter"},
+		RenamedExecutable:   "renamed-demo-exporter",
+	})
+}
+
 func TestRunBinaryWithServerSmoke(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module smoke.test\n\ngo 1.26.0\n"), 0o644); err != nil {
@@ -202,6 +234,27 @@ echo "unexpected args: $*" >&2
 exit 1
 EOF
 chmod +x "$out"
+`, Version, Branch, Revision)
+}
+
+func fakeBinaryScript() string {
+	return fmt.Sprintf(`#!/bin/sh
+case "$1" in
+	--version)
+		echo "%[1]s %[2]s %[3]s"
+		exit 0
+		;;
+	--help)
+		echo "usage: $(basename "$0") [<flags>]"
+		exit 0
+		;;
+	--web.telemetry-path=metrics)
+		echo 'invalid --web.telemetry-path "metrics"'
+		exit 1
+		;;
+esac
+echo "unexpected args: $*" >&2
+exit 1
 `, Version, Branch, Revision)
 }
 

@@ -27,6 +27,7 @@ type ServerArgsFunc func(t *testing.T, root string) []string
 
 type Config struct {
 	ProjectName         string
+	BinaryPath          string
 	BuildInfoMetric     string
 	ForbiddenUsageNames []string
 	RenamedExecutable   string
@@ -51,7 +52,7 @@ func RunBinary(t *testing.T, config Config) {
 	}
 
 	root := repoRoot(t)
-	binary := buildBinary(t, root, config)
+	binary := testBinary(t, root, config)
 
 	t.Run("prints injected version metadata", func(t *testing.T) {
 		output := runBinary(t, binary, "--version")
@@ -256,6 +257,23 @@ func buildBinary(t *testing.T, root string, config Config) string {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("go build failed: %v\n%s", err, output)
+	}
+	return binary
+}
+
+func testBinary(t *testing.T, root string, config Config) string {
+	t.Helper()
+
+	if config.BinaryPath == "" {
+		return buildBinary(t, root, config)
+	}
+
+	binary := config.BinaryPath
+	if !filepath.IsAbs(binary) {
+		binary = filepath.Join(root, binary)
+	}
+	if _, err := os.Stat(binary); err != nil {
+		t.Fatalf("smoke binary %s: %v", binary, err)
 	}
 	return binary
 }

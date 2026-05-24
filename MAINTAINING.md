@@ -14,6 +14,8 @@ make check
 
 `make check` runs formatting checks, `go vet`, `staticcheck`, coverage threshold
 checks, binary smoke tests, and race tests.
+CI also checks the external `prometheus-exporter-scaffold` repository by
+rendering a demo exporter against the current framework checkout.
 
 Concrete exporter scaffolding lives in the separate
 `prometheus-exporter-scaffold` repository. The release workflow verifies the
