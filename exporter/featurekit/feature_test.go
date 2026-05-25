@@ -64,7 +64,7 @@ func TestFeatureRegistersFlagsRuntimeConfigAndCollectors(t *testing.T) {
 
 	var starts atomic.Int32
 	feature := NewFeature(FeatureSpec[testConfig, testSnapshot]{
-		DefaultFeatureName:      "demo",
+		FeatureName:             "demo",
 		FallbackRefreshInterval: time.Minute,
 		Config:                  testConfig{target: "default"},
 		RegisterFlagsFunc: func(app *kingpin.Application, ctx FlagContext, config *testConfig) {
@@ -103,6 +103,12 @@ func TestFeatureRegistersFlagsRuntimeConfigAndCollectors(t *testing.T) {
 		RuntimeConfigFunc: func(ctx RuntimeConfigContext[testConfig]) []any {
 			return []any{"target", ctx.Config.target}
 		},
+		SmokeFunc: func(ctx SmokeContext[testConfig]) SmokeSpec {
+			return SmokeSpec{
+				ServerArgs:  []string{"--" + ctx.FeatureName + ".target=" + ctx.Config.target},
+				WantMetrics: []string{ctx.FeatureName + "_value 1"},
+			}
+		},
 	})
 	if got := feature.FeatureName(); got != "demo" {
 		t.Fatalf("FeatureName() = %q, want demo", got)
@@ -135,6 +141,14 @@ func TestFeatureRegistersFlagsRuntimeConfigAndCollectors(t *testing.T) {
 		t.Fatalf("collector starts = %d, want 1", got)
 	}
 	exportertest.WaitForMetricValue(t, registry, "demo_value", nil, 7)
+
+	smoke := feature.SmokeSpec()
+	if got := smoke.ServerArgs; len(got) != 1 || got[0] != "--demo.target=node-a" {
+		t.Fatalf("SmokeSpec().ServerArgs = %v, want --demo.target=node-a", got)
+	}
+	if got := smoke.WantMetrics; len(got) != 1 || got[0] != "demo_value 1" {
+		t.Fatalf("SmokeSpec().WantMetrics = %v, want demo_value 1", got)
+	}
 }
 
 func TestFeatureReportsValidationError(t *testing.T) {
@@ -142,7 +156,7 @@ func TestFeatureReportsValidationError(t *testing.T) {
 
 	wantErr := errors.New("invalid config")
 	feature := NewFeature(FeatureSpec[testConfig, testSnapshot]{
-		DefaultFeatureName:      "demo",
+		FeatureName:             "demo",
 		FallbackRefreshInterval: time.Minute,
 		ValidateConfigFunc: func(testConfig) error {
 			return wantErr

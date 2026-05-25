@@ -86,7 +86,7 @@ The public extension surface is:
 - `ExporterNameFromProject` and `DescriptionFromProject`
 - `HydrateVersionMetadata` and `ResolveVersionMetadata`
 
-The `exporter/featurekit` subpackage is public support for generated exporters and exposes `FeatureSpec`, `Feature`, `SmokeSpec`, `SnapshotCollectorOptions`, `ResolveSnapshotCollectorOptions`, and `NewSnapshotCollector`.
+The `exporter/featurekit` subpackage is public support for generated exporters and exposes `FeatureSpec`, `Feature`, `SmokeSpec`, `SmokeContext`, `SnapshotCollectorOptions`, `ResolveSnapshotCollectorOptions`, and `NewSnapshotCollector`.
 
 The `exporter/exportertest` subpackage is public test support for downstream exporters.
 

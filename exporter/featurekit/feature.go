@@ -13,14 +13,12 @@ import (
 
 type SpecOptions struct {
 	FeatureName             string
-	DefaultFeatureName      string
 	DefaultRefreshInterval  time.Duration
 	FallbackRefreshInterval time.Duration
 }
 
 type FeatureSpec[C any, S any] struct {
 	FeatureName             string
-	DefaultFeatureName      string
 	DefaultRefreshInterval  time.Duration
 	FallbackRefreshInterval time.Duration
 	Config                  C
@@ -29,6 +27,8 @@ type FeatureSpec[C any, S any] struct {
 	NewSnapshotterFunc      func(ctx CollectorContext[C]) (framework.Snapshotter[S], error)
 	NewCollectorFunc        NewCollectorFunc[S]
 	RuntimeConfigFunc       func(ctx RuntimeConfigContext[C]) []any
+	Smoke                   SmokeSpec
+	SmokeFunc               func(ctx SmokeContext[C]) SmokeSpec
 }
 
 type FlagContext struct {
@@ -49,6 +49,11 @@ type RuntimeConfigContext[C any] struct {
 	RefreshInterval time.Duration
 }
 
+type SmokeContext[C any] struct {
+	FeatureName string
+	Config      C
+}
+
 type NewCollectorFunc[S any] func(featureName string, namespace string, logger *slog.Logger, snapshotter framework.Snapshotter[S], refreshInterval time.Duration) framework.StartableCollector
 
 type SmokeSpec struct {
@@ -67,16 +72,14 @@ type Feature[C any, S any] struct {
 	newSnapshotterFunc     func(ctx CollectorContext[C]) (framework.Snapshotter[S], error)
 	newCollectorFunc       NewCollectorFunc[S]
 	runtimeConfigFunc      func(ctx RuntimeConfigContext[C]) []any
+	smoke                  SmokeSpec
+	smokeFunc              func(ctx SmokeContext[C]) SmokeSpec
 }
 
 func NewFeature[C any, S any](spec FeatureSpec[C, S]) *Feature[C, S] {
-	defaultFeatureName := spec.DefaultFeatureName
-	if defaultFeatureName == "" {
-		defaultFeatureName = "exporter"
-	}
 	featureName := spec.FeatureName
 	if featureName == "" {
-		featureName = defaultFeatureName
+		featureName = "exporter"
 	}
 	fallbackRefreshInterval := spec.FallbackRefreshInterval
 	if fallbackRefreshInterval <= 0 {
@@ -97,6 +100,8 @@ func NewFeature[C any, S any](spec FeatureSpec[C, S]) *Feature[C, S] {
 		newSnapshotterFunc:     spec.NewSnapshotterFunc,
 		newCollectorFunc:       spec.NewCollectorFunc,
 		runtimeConfigFunc:      spec.RuntimeConfigFunc,
+		smoke:                  spec.Smoke,
+		smokeFunc:              spec.SmokeFunc,
 	}
 }
 
@@ -167,4 +172,14 @@ func (f *Feature[C, S]) RuntimeConfig() []any {
 		})...)
 	}
 	return config
+}
+
+func (f *Feature[C, S]) SmokeSpec() SmokeSpec {
+	if f.smokeFunc != nil {
+		return f.smokeFunc(SmokeContext[C]{
+			FeatureName: f.featureName,
+			Config:      f.config,
+		})
+	}
+	return f.smoke
 }

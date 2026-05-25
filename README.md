@@ -94,7 +94,7 @@ The concrete exporter still owns the domain snapshot type and all business metri
 ## Generated Feature Helpers
 
 Generated exporters can import `github.com/zxzharmlesszxz/prometheus-exporter-framework/exporter/featurekit`.
-That subpackage wraps the common generated-exporter pattern: a typed domain config, common refresh flag, runtime config, snapshotter factory, collector factory, and collector startup lifecycle.
+That subpackage wraps the common generated-exporter pattern: a typed domain config, common refresh flag, runtime config, snapshotter factory, collector factory, smoke-test metadata, and collector startup lifecycle.
 
 Concrete exporters still own their domain flags, snapshot type, metric descriptors, and snapshot-to-metrics adapter.
 The scaffold owns only the glue that passes a typed `featurekit.FeatureSpec` to the framework.
