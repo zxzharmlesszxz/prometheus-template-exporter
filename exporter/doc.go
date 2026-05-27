@@ -10,10 +10,14 @@
 // or timestamp/boolean gauge conversion.
 //
 // Concrete exporters provide domain behavior by implementing Feature and
-// passing one or more features to MainFromProject, MainForProject, Main,
-// RunCLIFromProject, or RunCLI. A feature registers its own flags and
-// collectors; optional interfaces add feature names to logs, report runtime
-// configuration fields, or override the default listen address.
+// passing one or more features to MainFromProject, MainFromInjectedProject,
+// MainForProject, Main, RunCLIFromProject, or RunCLI. A feature registers its
+// own flags and collectors; optional interfaces add feature names to logs,
+// report runtime configuration fields, provide binary smoke metadata, or
+// override the default listen address. Generated exporters usually use
+// Makefile-injected project metadata through ConfigFromInjectedProject and
+// ExporterInfoFromInjectedProject, which keeps project bootstrap code out of
+// concrete repositories.
 // SnapshotCollector is available for features that need a background refresh
 // worker, cached scrape-time snapshots, and common collection health metrics.
 // The exporter/featurekit subpackage provides typed lifecycle helpers for

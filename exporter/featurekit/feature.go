@@ -56,11 +56,7 @@ type SmokeContext[C any] struct {
 
 type NewCollectorFunc[S any] func(featureName string, namespace string, logger *slog.Logger, snapshotter framework.Snapshotter[S], refreshInterval time.Duration) framework.StartableCollector
 
-type SmokeSpec struct {
-	ServerArgs    []string
-	WantMetrics   []string
-	RejectMetrics []string
-}
+type SmokeSpec = framework.SmokeSpec
 
 type Feature[C any, S any] struct {
 	featureName            string

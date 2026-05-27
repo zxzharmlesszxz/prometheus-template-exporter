@@ -25,6 +25,16 @@ type RuntimeConfigReporter interface {
 	RuntimeConfig() []any
 }
 
+type SmokeSpecProvider interface {
+	SmokeSpec() SmokeSpec
+}
+
+type SmokeSpec struct {
+	ServerArgs    []string
+	WantMetrics   []string
+	RejectMetrics []string
+}
+
 type DefaultListenAddressProvider interface {
 	DefaultListenAddress() string
 }
