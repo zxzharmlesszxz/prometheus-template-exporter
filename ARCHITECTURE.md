@@ -12,9 +12,23 @@ Domain logic is supplied by external `exporter.Feature` implementations.
 - `cmd`
   Minimal binary that runs the shell without domain features.
 - `exporter`
-  Public framework package used by concrete exporters.
+  Public framework facade used by concrete exporters. It preserves the stable
+  `exporter.X` API while delegating implementation to focused internal packages.
+- `exporter/internal/app`
+  CLI bootstrap, config derivation, HTTP server wiring, registry setup,
+  version hydration, and injected project metadata.
+- `exporter/internal/feature`
+  Feature contracts plus collector registration and startup helpers.
+- `exporter/internal/snapshot`
+  Typed snapshot cache and background refresh collector.
+- `exporter/internal/files`
+  File mtime and file scrape metric helpers.
+- `exporter/internal/metric`
+  Small metric value helpers.
 - `exporter/featurekit`
   Typed generated-feature lifecycle helpers used by scaffolded exporters.
+- `exporter/exportertest`
+  Test helpers and downstream feature contract checks.
 
 ## Data Flow
 
